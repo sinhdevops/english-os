@@ -5,7 +5,7 @@ const PROTECTED_PREFIXES = ["/dashboard", "/topics", "/lessons", "/practice", "/
 const ADMIN_PREFIX = "/admin";
 const AUTH_PATHS = ["/login", "/register"];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const response = NextResponse.next({ request });

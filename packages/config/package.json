@@ -2,6 +2,7 @@
   "name": "@english-os/config",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "exports": {
     "./tsconfig/*": "./tsconfig/*.json",
     "./tailwind/*": "./tailwind/*.ts"
