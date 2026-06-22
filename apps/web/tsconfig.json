@@ -1,0 +1,33 @@
+{
+  "extends": "../../packages/config/tsconfig/nextjs.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@english-os/constants": [
+        "../../packages/constants/src/index.ts"
+      ],
+      "@english-os/types": [
+        "../../packages/types/src/index.ts"
+      ],
+      "@english-os/validators": [
+        "../../packages/validators/src/index.ts"
+      ],
+      "@english-os/db": [
+        "../../packages/db/src/index.ts"
+      ]
+    },
+    "isolatedModules": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -1,0 +1,431 @@
+// ─── Prisma Schema ───────────────────────────────────────────────────────────
+// English Learning OS
+// Database: Supabase PostgreSQL
+// Connection: pooler (runtime) + direct (migrate)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum LevelTier {
+  ZERO
+  FOUNDATION
+  IELTS
+}
+
+enum SkillType {
+  LISTENING
+  SPEAKING
+  READING
+  WRITING
+  VOCABULARY
+  GRAMMAR
+}
+
+enum LessonStepType {
+  VOCABULARY
+  GRAMMAR
+  LISTENING
+  SPEAKING
+  WRITING
+  QUESTION
+  MISSION
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+// ─── Profile ─────────────────────────────────────────────────────────────────
+
+model Profile {
+  id           String  @id @default(cuid())
+  userId       String  @unique // Supabase Auth UID
+  email        String  @unique
+  displayName  String?
+  avatarUrl    String?
+  role         Role    @default(USER)
+  currentLevelId String?
+
+  currentLevel        Level?               @relation(fields: [currentLevelId], references: [id])
+  lessonProgress      UserLessonProgress[]
+  answers             UserAnswer[]
+  reviewItems         ReviewItem[]
+  speakingSubmissions SpeakingSubmission[]
+  writingSubmissions  WritingSubmission[]
+  streak              Streak?
+  mistakes            UserMistake[]
+  placementTest       PlacementTest?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+// ─── Level ───────────────────────────────────────────────────────────────────
+
+model Level {
+  id          String    @id @default(cuid())
+  name        String    @unique // "Zero", "A1", "A2" …
+  slug        String    @unique
+  tier        LevelTier
+  order       Int       @unique
+  description String?
+
+  profiles Profile[]
+  topics   Topic[]
+
+  @@map("levels")
+}
+
+// ─── Topic ───────────────────────────────────────────────────────────────────
+
+model Topic {
+  id           String  @id @default(cuid())
+  title        String
+  slug         String  @unique
+  description  String?
+  thumbnailUrl String?
+  levelId      String
+  order        Int
+  isPublished  Boolean @default(false)
+
+  level   Level    @relation(fields: [levelId], references: [id])
+  lessons Lesson[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("topics")
+}
+
+// ─── Lesson ──────────────────────────────────────────────────────────────────
+
+model Lesson {
+  id          String  @id @default(cuid())
+  title       String
+  slug        String  @unique
+  description String?
+  topicId     String
+  order       Int
+  isPublished Boolean @default(false)
+
+  topic         Topic                @relation(fields: [topicId], references: [id])
+  steps         LessonStep[]
+  speakingTasks SpeakingTask[]
+  writingTasks  WritingTask[]
+  userProgress  UserLessonProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("lessons")
+}
+
+// ─── Lesson Step ─────────────────────────────────────────────────────────────
+
+model LessonStep {
+  id       String         @id @default(cuid())
+  lessonId String
+  type     LessonStepType
+  order    Int
+  title    String?
+  content  Json           // typed by LessonStepContent union in @english-os/types
+
+  lesson          Lesson           @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  vocabularyItems VocabularyItem[]
+  grammarPoints   GrammarPoint[]
+  questions       Question[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("lesson_steps")
+}
+
+// ─── Vocabulary Item ─────────────────────────────────────────────────────────
+
+model VocabularyItem {
+  id              String  @id @default(cuid())
+  lessonStepId    String?
+  word            String
+  pronunciation   String?
+  definition      String
+  exampleSentence String?
+  collocations    String[]
+  imageUrl        String?
+  audioUrl        String?
+
+  lessonStep  LessonStep?  @relation(fields: [lessonStepId], references: [id], onDelete: SetNull)
+  reviewItems ReviewItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("vocabulary_items")
+}
+
+// ─── Grammar Point ───────────────────────────────────────────────────────────
+
+model GrammarPoint {
+  id           String   @id @default(cuid())
+  lessonStepId String?
+  title        String   // e.g. "Present Simple"
+  explanation  String
+  examples     String[]
+  structure    String?  // e.g. "Subject + V(s/es)"
+
+  lessonStep LessonStep? @relation(fields: [lessonStepId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("grammar_points")
+}
+
+// ─── Question ────────────────────────────────────────────────────────────────
+
+model Question {
+  id           String    @id @default(cuid())
+  lessonStepId String?
+  prompt       String
+  explanation  String?
+  skill        SkillType
+
+  lessonStep  LessonStep?      @relation(fields: [lessonStepId], references: [id], onDelete: SetNull)
+  options     QuestionOption[]
+  userAnswers UserAnswer[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("questions")
+}
+
+model QuestionOption {
+  id          String  @id @default(cuid())
+  questionId  String
+  text        String
+  isCorrect   Boolean
+  explanation String?
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@map("question_options")
+}
+
+// ─── User Progress ───────────────────────────────────────────────────────────
+
+model UserAnswer {
+  id               String  @id @default(cuid())
+  profileId        String
+  questionId       String
+  selectedOptionId String?
+  textAnswer       String?
+  isCorrect        Boolean?
+  score            Int?
+
+  profile  Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("user_answers")
+}
+
+model UserLessonProgress {
+  id          String         @id @default(cuid())
+  profileId   String
+  lessonId    String
+  status      ProgressStatus @default(NOT_STARTED)
+  score       Int?
+  completedAt DateTime?
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  lesson  Lesson  @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([profileId, lessonId])
+  @@map("user_lesson_progress")
+}
+
+// ─── Spaced Repetition Review ────────────────────────────────────────────────
+
+model ReviewItem {
+  id               String  @id @default(cuid())
+  profileId        String
+  vocabularyItemId String?
+  nextReviewAt     DateTime
+  interval         Int     @default(1)   // days between reviews (SM-2)
+  easeFactor       Float   @default(2.5) // SM-2 ease factor
+  repetitions      Int     @default(0)
+  isArchived       Boolean @default(false)
+
+  profile        Profile         @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  vocabularyItem VocabularyItem? @relation(fields: [vocabularyItemId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("review_items")
+}
+
+// ─── Speaking ────────────────────────────────────────────────────────────────
+
+model SpeakingTask {
+  id              String   @id @default(cuid())
+  lessonId        String?
+  prompt          String
+  durationSeconds Int      @default(60)
+  hints           String[]
+
+  lesson      Lesson?              @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  submissions SpeakingSubmission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("speaking_tasks")
+}
+
+model SpeakingSubmission {
+  id              String  @id @default(cuid())
+  profileId       String
+  speakingTaskId  String
+  audioKey        String  // Cloudflare R2 object key — e.g. audio/users/{uid}/speaking/{id}.webm
+  audioUrl        String? // optional public CDN URL
+  durationSeconds Int?
+  mimeType        String?
+  fileSizeBytes   Int?
+  selfScore       Int?    // 0-10 self assessment
+
+  profile      Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  speakingTask SpeakingTask @relation(fields: [speakingTaskId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("speaking_submissions")
+}
+
+// ─── Writing ─────────────────────────────────────────────────────────────────
+
+model WritingTask {
+  id           String   @id @default(cuid())
+  lessonId     String?
+  prompt       String
+  wordCountMin Int?
+  wordCountMax Int?
+  hints        String[]
+
+  lesson      Lesson?             @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  submissions WritingSubmission[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("writing_tasks")
+}
+
+model WritingSubmission {
+  id            String  @id @default(cuid())
+  profileId     String
+  writingTaskId String
+  content       String  @db.Text
+  wordCount     Int?
+  selfScore     Int?    // 0-10 self assessment
+
+  profile     Profile     @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  writingTask WritingTask @relation(fields: [writingTaskId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@map("writing_submissions")
+}
+
+// ─── Mistake Book ────────────────────────────────────────────────────────────
+
+enum MistakeCategory {
+  GRAMMAR
+  VOCABULARY
+  SPEAKING
+  WRITING
+  LISTENING
+  READING
+  PRONUNCIATION
+}
+
+model UserMistake {
+  id          String          @id @default(cuid())
+  profileId   String
+  category    MistakeCategory
+  tag         String          // e.g. "subject-verb-agreement", "article", "False-vs-Not-Given"
+  errorText   String          // what the user wrote/said
+  correction  String          // the correct version
+  explanation String?         // why it is wrong
+  sourceType  String?         // "lesson" | "quiz" | "speaking" | "writing" | "listening" | "reading" | "mock"
+  sourceId    String?         // ID of the lesson/step/quiz it came from
+  reviewCount Int             @default(0)
+  isResolved  Boolean         @default(false)
+  nextReviewAt DateTime       @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("user_mistakes")
+}
+
+// ─── Placement Test ───────────────────────────────────────────────────────────
+
+model PlacementTest {
+  id          String   @id @default(cuid())
+  profileId   String   @unique
+  grammarScore    Int?
+  vocabularyScore Int?
+  listeningScore  Int?
+  readingScore    Int?
+  estimatedLevel  String?  // "A0" | "A1" | "A2" | "B1" | "B2" | "C1"
+  estimatedBand   Float?   // IELTS estimated band
+  weaknesses   String[] // e.g. ["grammar", "listening"]
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  completedAt DateTime @default(now())
+
+  @@map("placement_tests")
+}
+
+// ─── Streak ──────────────────────────────────────────────────────────────────
+
+model Streak {
+  id             String    @id @default(cuid())
+  profileId      String    @unique
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastActivityAt DateTime?
+
+  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  updatedAt DateTime @updatedAt
+
+  @@map("streaks")
+}
