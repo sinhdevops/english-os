@@ -5,22 +5,18 @@ type Props = { streak: StreakData };
 
 export function StreakCard({ streak }: Props) {
   return (
-    <div className="glass-card rounded-2xl p-5">
-      <h3 className="font-semibold text-brand-text mb-4">Streak học tập</h3>
-      <div className="flex gap-4">
-        <div className="flex items-center gap-2">
-          <Flame className="size-8 text-orange-400" />
-          <div>
-            <p className="text-2xl font-bold text-brand-text">{streak.currentStreak}</p>
-            <p className="text-xs text-brand-muted">ngày liên tiếp</p>
-          </div>
+    <div className="rounded-[24px] border border-[#E2E8F0] bg-white p-5 shadow-sm">
+      <h3 className="mb-4 text-lg font-black text-[#0F172A]">Streak học tập</h3>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-2xl bg-orange-50 p-4">
+          <Flame className="size-7 fill-[#F59E0B] text-[#F59E0B]" />
+          <p className="mt-3 text-3xl font-black text-[#0F172A]">{streak.currentStreak}</p>
+          <p className="text-xs font-bold text-[#64748B]">ngày liên tiếp</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Zap className="size-8 text-brand-gold" />
-          <div>
-            <p className="text-2xl font-bold text-brand-text">{streak.longestStreak}</p>
-            <p className="text-xs text-brand-muted">kỷ lục</p>
-          </div>
+        <div className="rounded-2xl bg-blue-50 p-4">
+          <Zap className="size-7 fill-[#2563EB] text-[#2563EB]" />
+          <p className="mt-3 text-3xl font-black text-[#0F172A]">{streak.longestStreak}</p>
+          <p className="text-xs font-bold text-[#64748B]">kỷ lục</p>
         </div>
       </div>
     </div>

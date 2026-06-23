@@ -6,50 +6,55 @@ import { Button } from "@/components/ui/button";
 
 type Props = { item: ReviewItemData; onRate: (id: string, quality: number) => void };
 
+const ratingButtons = [
+  { label: "Quên", helper: "Ôn lại sớm", quality: 0, className: "bg-red-50 text-red-600 hover:bg-red-100" },
+  { label: "Khó", helper: "Cần nhắc lại", quality: 2, className: "bg-orange-50 text-orange-600 hover:bg-orange-100" },
+  { label: "OK", helper: "Nhớ tạm", quality: 3, className: "bg-amber-50 text-amber-600 hover:bg-amber-100" },
+  { label: "Dễ", helper: "Để lâu hơn", quality: 5, className: "bg-emerald-50 text-emerald-600 hover:bg-emerald-100" },
+];
+
 export function ReviewCard({ item, onRate }: Props) {
   const [revealed, setReveal] = useState(false);
   const { vocabularyItem: vocab } = item;
 
   return (
-    <div className="glass-card rounded-2xl p-6 space-y-6 min-h-64 flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center text-center space-y-3">
-        <p className="text-3xl font-bold text-brand-text">{vocab.word}</p>
+    <div className="rounded-[28px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
+      <div className="flex min-h-72 flex-col items-center justify-center rounded-[24px] bg-[#F8FAFC] p-6 text-center">
+        <p className="text-sm font-black uppercase tracking-wide text-[#2563EB]">Từ cần ôn</p>
+        <p className="mt-4 text-5xl font-black tracking-normal text-[#0F172A]">{vocab.word}</p>
 
         {revealed ? (
-          <div className="space-y-2 animate-fade-in">
-            <p className="text-brand-muted">{vocab.definition}</p>
-            {vocab.exampleSentence && (
-              <p className="text-sm text-brand-primary/80 italic">"{vocab.exampleSentence}"</p>
-            )}
+          <div className="mt-6 max-w-lg space-y-3">
+            <p className="text-lg font-bold leading-7 text-[#334155]">{vocab.definition}</p>
+            {vocab.exampleSentence ? <p className="rounded-2xl bg-white p-4 text-sm italic leading-6 text-[#64748B]">"{vocab.exampleSentence}"</p> : null}
           </div>
         ) : (
-          <Button variant="ghost" size="sm" onClick={() => setReveal(true)}>
+          <Button className="mt-8 h-12 rounded-2xl bg-[#2563EB] px-6 font-extrabold hover:bg-[#1D4ED8]" onClick={() => setReveal(true)}>
             Hiện nghĩa
           </Button>
         )}
       </div>
 
-      {revealed && (
-        <div className="animate-slide-up">
-          <p className="text-xs text-center text-brand-muted mb-3">Bạn nhớ từ này như thế nào?</p>
-          <div className="grid grid-cols-4 gap-2">
-            {[
-              { label: "Quên", quality: 0, color: "bg-red-500/20 text-red-400 hover:bg-red-500/30" },
-              { label: "Khó", quality: 2, color: "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30" },
-              { label: "OK", quality: 3, color: "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30" },
-              { label: "Dễ", quality: 5, color: "bg-green-500/20 text-green-400 hover:bg-green-500/30" },
-            ].map((btn) => (
+      {revealed ? (
+        <div className="mt-6">
+          <p className="mb-3 text-center text-sm font-bold text-[#64748B]">Bạn nhớ từ này như thế nào?</p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {ratingButtons.map((button) => (
               <button
-                key={btn.quality}
-                onClick={() => { setReveal(false); onRate(item.id, btn.quality); }}
-                className={`rounded-xl py-2 text-xs font-medium transition-colors ${btn.color}`}
+                key={button.quality}
+                onClick={() => {
+                  setReveal(false);
+                  onRate(item.id, button.quality);
+                }}
+                className={`rounded-2xl px-3 py-4 text-center transition-colors ${button.className}`}
               >
-                {btn.label}
+                <span className="block text-base font-black">{button.label}</span>
+                <span className="mt-1 block text-xs font-semibold opacity-80">{button.helper}</span>
               </button>
             ))}
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

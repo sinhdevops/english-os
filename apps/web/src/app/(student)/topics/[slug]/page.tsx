@@ -6,6 +6,13 @@ import { PROGRESS_STATUS } from "@english-os/constants";
 import type { TopicDetail } from "@english-os/types";
 
 type Props = { params: Promise<{ slug: string }> };
+type RawLesson = {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  order: number;
+};
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -29,7 +36,7 @@ export default async function TopicDetailPage({ params }: Props) {
     levelSlug: raw.level.slug,
     lessonCount: raw.lessons.length,
     progress: 0,
-    lessons: raw.lessons.map((lesson) => ({
+    lessons: raw.lessons.map((lesson: RawLesson) => ({
       id: lesson.id,
       title: lesson.title,
       slug: lesson.slug,

@@ -58,8 +58,8 @@ export const baseConfig: Partial<Config> = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)"],
-        mono: ["var(--font-geist-mono)"],
+        sans: ["var(--font-be-vietnam-pro)", "system-ui", "sans-serif"],
+        mono: ["var(--font-geist-mono)", "ui-monospace", "monospace"],
       },
       animation: {
         "fade-in": "fadeIn 0.3s ease-in-out",

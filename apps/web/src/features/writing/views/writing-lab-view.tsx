@@ -1,64 +1,76 @@
 "use client";
 
-import { useWritingDraft } from "@/features/writing/hooks/use-writing-draft";
+import { CheckCircle2, PenLine, Send, Sparkles, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Send, Type } from "lucide-react";
+import { useWritingDraft } from "@/features/writing/hooks/use-writing-draft";
 
 const DEMO_TASK_ID = "demo-task-id";
+const hints = ["My name is ...", "I live in ...", "I work as ...", "My hobby is ...", "I am learning English to ..."];
 
 export function WritingLabView() {
   const { content, setContent, wordCount, isSubmitting, submitted, submit } = useWritingDraft(DEMO_TASK_ID);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-brand-text">Writing Lab</h1>
-        <p className="text-brand-muted text-sm mt-1">Luyện viết tiếng Anh</p>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Left: prompt + hints */}
-        <div className="glass-card rounded-2xl p-5 space-y-4">
-          <div>
-            <p className="text-xs text-brand-muted mb-1">Đề bài</p>
-            <p className="text-brand-text text-sm">
-              Write 5 sentences about yourself. Tell us your name, where you live, your job, your hobby, and your English learning goal.
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-brand-muted mb-2">Gợi ý</p>
-            <ul className="space-y-1.5">
-              {["My name is ...", "I live in ...", "I work as ...", "My hobby is ...", "I am learning English to ..."].map((hint, i) => (
-                <li key={i} className="text-xs text-brand-primary/80 flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-brand-primary/50 shrink-0" />
-                  {hint}
-                </li>
-              ))}
-            </ul>
-          </div>
+    <div className="mx-auto max-w-6xl space-y-6">
+      <section className="rounded-[28px] border border-[#FEF3C7] bg-gradient-to-br from-white to-amber-50 p-6 shadow-sm">
+        <div className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-black text-[#F59E0B]">
+          <Sparkles className="size-3.5 fill-current" />
+          Writing Lab
         </div>
+        <h1 className="mt-3 text-3xl font-black text-[#0F172A]">Viết rõ ý, đúng cấu trúc, dễ sửa</h1>
+        <p className="mt-2 max-w-2xl text-sm font-medium leading-7 text-[#64748B]">
+          Bắt đầu từ câu đơn giản. Theo dõi số từ, dùng gợi ý và nộp bài để lưu lại quá trình luyện viết.
+        </p>
+      </section>
 
-        {/* Right: editor */}
-        <div className="glass-card rounded-2xl p-5 flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Type className="size-4 text-brand-muted" />
-              <span className="text-xs text-brand-muted">{wordCount} từ</span>
+      <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
+        <section className="rounded-[28px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="mb-5 flex items-center gap-3">
+            <div className="grid size-12 place-items-center rounded-2xl bg-amber-50 text-[#F59E0B]">
+              <PenLine className="size-6" />
             </div>
-            {submitted && <span className="text-xs text-green-400">✓ Đã lưu</span>}
+            <div>
+              <p className="text-sm font-bold text-[#64748B]">Đề bài</p>
+              <p className="font-black text-[#0F172A]">5 câu giới thiệu bản thân</p>
+            </div>
+          </div>
+          <p className="rounded-2xl bg-[#F8FAFC] p-4 text-sm font-medium leading-7 text-[#334155]">
+            Write 5 sentences about yourself. Tell us your name, where you live, your job, your hobby, and your English learning goal.
+          </p>
+
+          <div className="mt-5">
+            <p className="mb-3 text-sm font-black text-[#0F172A]">Gợi ý câu mẫu</p>
+            <div className="space-y-2">
+              {hints.map((hint) => (
+                <div key={hint} className="flex items-center gap-2 rounded-2xl bg-blue-50 p-3 text-sm font-semibold text-[#2563EB]">
+                  <CheckCircle2 className="size-4" />
+                  {hint}
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="flex min-h-[520px] flex-col rounded-[28px] border border-[#E2E8F0] bg-white p-6 shadow-sm">
+          <div className="mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-black text-[#64748B]">
+              <Type className="size-4" />
+              {wordCount} từ
+            </div>
+            {submitted ? <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-[#10B981]">Đã lưu</span> : null}
           </div>
           <textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(event) => setContent(event.target.value)}
             placeholder="Viết bài ở đây..."
             disabled={submitted}
-            className="flex-1 min-h-48 resize-none bg-transparent text-brand-text text-sm outline-none placeholder:text-brand-muted/50"
+            className="min-h-80 flex-1 resize-none rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 text-sm font-medium leading-7 text-[#0F172A] outline-none transition-colors placeholder:text-[#94A3B8] focus:border-blue-200 focus:bg-white"
           />
-          <Button onClick={() => submit()} disabled={isSubmitting || submitted} className="w-full">
-            <Send className="size-4 mr-2" />
+          <Button onClick={() => submit()} disabled={isSubmitting || submitted} className="mt-4 h-12 w-full rounded-2xl bg-[#2563EB] font-extrabold hover:bg-[#1D4ED8]">
+            <Send className="mr-2 size-4" />
             {isSubmitting ? "Đang lưu..." : submitted ? "Đã nộp" : "Nộp bài"}
           </Button>
-        </div>
+        </section>
       </div>
     </div>
   );
